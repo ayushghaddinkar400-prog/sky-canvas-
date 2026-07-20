@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skylight Farm — Weather for Growers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha512-sA+2siC5JXI4M7a7ueaN7KUFl4o3GqlLKQ6Clc7wVs5a1+6jV2oS5RhYjUubaGJ1lxT3GbfG4T8mXlrErFf+MQ=="
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="skyParticles" class="sky-particles" aria-hidden="true"></div>
+
+    <main class="app-shell">
+      <section class="weather-card">
+        <header class="top-bar">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="brand-name">Skylight Farm</span>
+          </div>
+          <div class="top-bar-actions">
+            <label class="pill-toggle crop-select-wrap" title="Crop for growing degree days">
+              🌱
+              <select id="cropSelect" aria-label="Select crop">
+                <option value="10">Wheat / Maize (base 10°C)</option>
+                <option value="10-rice">Rice (base 10°C)</option>
+                <option value="15.5">Cotton (base 15.5°C)</option>
+                <option value="7">Cool-season veg (base 7°C)</option>
+              </select>
+            </label>
+            <button id="unitToggle" class="pill-toggle" type="button" title="Switch units">
+              °C
+            </button>
+            <button id="themeToggle" class="pill-toggle" type="button" title="Switch theme">
+              🌙
+            </button>
+            <div id="authArea" class="auth-area"></div>
+          </div>
+        </header>
+
+        <div class="search-bar">
+          <input
+            id="cityInput"
+            type="text"
+            placeholder="Search for a city"
+            autocomplete="off"
+            aria-label="City search"
+          />
+          <button id="searchButton" type="button">Search</button>
+          <button
+            id="currentLocationButton"
+            type="button"
+            class="location-button"
+          >
+            Use current location
+          </button>
+          <button id="favoriteButton" class="location-button favorite-button" type="button" title="Save this city">
+            ☆ Save
+          </button>
+        </div>
+
+        <div id="chipRow" class="chip-row" aria-label="Saved and recent cities"></div>
+
+        <div id="statusMessage" class="status-message">
+          Loading live weather…
+        </div>
+
+        <div class="hero-panel">
+          <div>
+            <p id="cityName" class="city-name">--</p>
+            <p id="dateText" class="date-text">--</p>
+            <div class="current-temp-row">
+              <span id="temperature" class="temperature">--</span>
+              <span id="weatherIcon" class="weather-icon" aria-hidden="true"
+                >☁️</span
+              >
+            </div>
+            <p id="weatherDescription" class="weather-description">--</p>
+            <button id="shareButton" class="share-button" type="button">
+              ⤴ Share this forecast
+            </button>
+          </div>
+          <div class="highlights">
+            <div class="highlight-card">
+              <span>Feels like</span>
+              <strong id="feelsLike">--</strong>
+            </div>
+            <div class="highlight-card">
+              <span>Humidity</span>
+              <strong id="humidity">--</strong>
+            </div>
+            <div class="highlight-card">
+              <span>Wind</span>
+              <strong id="wind">--</strong>
+            </div>
+            <div class="highlight-card">
+              <span>Pressure</span>
+              <strong id="pressure">--</strong>
+            </div>
+            <div class="highlight-card">
+              <span>Sunrise</span>
+              <strong id="sunrise">--</strong>
+            </div>
+            <div class="highlight-card">
+              <span>Sunset</span>
+              <strong id="sunset">--</strong>
+            </div>
+            <div class="highlight-card">
+              <span>Air quality</span>
+              <strong id="airQuality">--</strong>
+            </div>
+            <div class="highlight-card">
+              <span>UV outlook</span>
+              <strong id="uvOutlook">--</strong>
+            </div>
+          </div>
+        </div>
+
+        <section class="farm-section">
+          <div class="section-heading">
+            <h2>🌾 Farm Insights</h2>
+            <span>Field-ready guidance</span>
+          </div>
+          <div id="frostBanner" class="frost-banner" hidden></div>
+          <div class="farm-grid">
+            <div class="farm-card">
+              <span>Soil temperature</span>
+              <strong id="soilTemp">--</strong>
+              <small>0 cm depth</small>
+            </div>
+            <div class="farm-card">
+              <span>Soil moisture</span>
+              <strong id="soilMoisture">--</strong>
+              <small>0–1 cm layer</small>
+            </div>
+            <div class="farm-card">
+              <span>7-day rainfall</span>
+              <strong id="rainfallTotal">--</strong>
+              <small>accumulated</small>
+            </div>
+            <div class="farm-card">
+              <span>Growing degree days</span>
+              <strong id="gddTotal">--</strong>
+              <small id="gddSub">next 7 days</small>
+            </div>
+            <div class="farm-card">
+              <span>Spray window</span>
+              <strong id="sprayWindow">--</strong>
+              <small>low wind, no rain</small>
+            </div>
+            <div class="farm-card">
+              <span>Irrigation need</span>
+              <strong id="irrigationTip">--</strong>
+              <small>rainfall vs. crop water use</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="hourly-section">
+          <div class="section-heading">
+            <h2>Next 12 hours</h2>
+            <span>Hourly outlook</span>
+          </div>
+          <div id="hourlyStrip" class="hourly-strip"></div>
+        </section>
+
+        <section class="insight-map-grid">
+          <div class="ai-panel">
+            <div class="section-heading">
+              <h2>AI Farm Assistant</h2>
+              <span>Smart guidance</span>
+            </div>
+            <p id="aiInsight" class="ai-insight">
+              Analyzing conditions for a personalized recommendation.
+            </p>
+            <p id="aiAction" class="ai-action">Prepare for changing weather.</p>
+          </div>
+
+          <div class="map-card">
+            <div class="section-heading">
+              <h2>Live Map</h2>
+              <span>Click anywhere to explore</span>
+            </div>
+            <div id="weatherMap" class="map"></div>
+          </div>
+        </section>
+
+        <section class="forecast-section">
+          <div class="section-heading">
+            <h2>7-Day Forecast</h2>
+            <span id="lastUpdated">Updated just now</span>
+          </div>
+          <div id="forecastCards" class="forecast-cards"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha512-o9N1j7f1yfTiq7+SPKLB3qDg9NqPjK08o20dA1TfRwV+r9oc2x6FQJLA0wO7V5CjZc2QxkF7+G5H4T/jpI0Ppg==" crossorigin="anonymous"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

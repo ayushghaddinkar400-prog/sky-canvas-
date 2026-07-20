@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create account — Skylight Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+
+<body>
+  <div class="auth-shell">
+    <section class="auth-visual" aria-hidden="true">
+      <div class="mood-ring mood-ring--dusk"></div>
+      <div class="auth-visual-copy">
+        <span class="eyebrow">Skylight Farm</span>
+        <h1>Every field, one shortlist.</h1>
+        <p>
+          Create an account to save favorite locations, track frost and
+          spray windows, and set your crop and units once.
+        </p>
+      </div>
+    </section>
+
+    <section class="auth-form-panel">
+      <div class="auth-form-card">
+        <h2>Create your Skylight Farm account</h2>
+        <p class="auth-sub">Takes less than a minute.</p>
+
+        <form id="registerForm" novalidate>
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" minlength="3" maxlength="50"
+            pattern="[a-zA-Z0-9_.]{3,50}" placeholder="jane_doe" required />
+          <span class="field-hint">Letters, numbers, dot and underscore only.</span>
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="jane@example.com" required />
+
+          <label for="password">Password</label>
+          <div class="password-row">
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+            <button type="button" class="toggle-visibility" id="togglePw">
+              Show
+            </button>
+          </div>
+          <div class="strength-meter" aria-hidden="true">
+            <span class="strength-bar" id="bar1"></span>
+            <span class="strength-bar" id="bar2"></span>
+            <span class="strength-bar" id="bar3"></span>
+            <span class="strength-bar" id="bar4"></span>
+          </div>
+          <div class="strength-label" id="strengthLabel">
+            At least 8 characters.
+          </div>
+
+          <label for="password_confirm">Confirm password</label>
+          <div class="password-row">
+            <input id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" required />
+            <button type="button" class="toggle-visibility" id="togglePwConfirm">Show</button>
+          </div>
+
+          <div class="terms-row">
+            <input type="checkbox" id="terms" required />
+            <label for="terms" class="terms-label">
+              I agree to the Terms of Service and Privacy Policy.
+            </label>
+          </div>
+
+          <div id="authMessage" class="auth-message" role="alert"></div>
+
+          <button type="submit" class="auth-submit">Create account</button>
+        </form>
+
+        <p class="auth-switch">
+          Already have an account? <a href="login.html">Sign in</a>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    // Password visibility toggles
+    const pwInput = document.getElementById("password");
+    const toggleBtn = document.getElementById("togglePw");
+    toggleBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      const isHidden = pwInput.type === "password";
+      pwInput.type = isHidden ? "text" : "password";
+      toggleBtn.textContent = isHidden ? "Hide" : "Show";
+    });
+
+    const pwConfirmInput = document.getElementById("password_confirm");
+    const togglePwConfirm = document.getElementById("togglePwConfirm");
+    togglePwConfirm.addEventListener("click", (event) => {
+      event.preventDefault();
+      const isHidden = pwConfirmInput.type === "password";
+      pwConfirmInput.type = isHidden ? "text" : "password";
+      togglePwConfirm.textContent = isHidden ? "Hide" : "Show";
+    });
+
+    // Lightweight strength meter
+    const bars = [1, 2, 3, 4].map((n) => document.getElementById(`bar${n}`));
+    const strengthLabel = document.getElementById("strengthLabel");
+    const strengthColors = ["#ff8b8b", "#ffb385", "#4cc9f0", "#7be6b4"];
+    const strengthText = ["Weak", "Fair", "Good", "Strong"];
+
+    pwInput.addEventListener("input", () => {
+      const value = pwInput.value;
+      let score = 0;
+      if (value.length >= 8) score += 1;
+      if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 1;
+      if (/\d/.test(value)) score += 1;
+      if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+      bars.forEach((bar, i) => {
+        bar.style.background =
+          i < score ? strengthColors[score - 1] : "var(--border)";
+      });
+      strengthLabel.textContent = value.length
+        ? `${strengthText[Math.max(score - 1, 0)]} password`
+        : "At least 8 characters.";
+    });
+
+    initAuthForm({
+      formId: "registerForm",
+      endpoint: "backend/register.php",
+        buildPayload: (data) => ({
+          username: data.username,
+          email: data.email,
+          password: data.password,
+          password_confirm: data.password_confirm,
+        }),
+      validate: (data) => {
+        if (!document.getElementById("terms").checked) {
+          return "Please accept the Terms of Service to continue.";
+        }
+        if (data.password.length < 8) {
+          return "Password must be at least 8 characters.";
+        }
+        if (data.password !== data.password_confirm) {
+          return "Passwords do not match.";
+        }
+        return null;
+      },
+      onSuccess: () => (window.location.href = "index.html"),
+    });
+  </script>
+</body>
+
+</html>

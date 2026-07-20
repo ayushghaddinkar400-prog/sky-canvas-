@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — Skylight Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+
+<body>
+  <div class="auth-shell">
+    <section class="auth-visual" aria-hidden="true">
+      <div class="mood-ring"></div>
+      <div class="auth-visual-copy">
+        <span class="eyebrow">Skylight Farm</span>
+        <h1>Weather that works your land.</h1>
+        <p>
+          Sign in to keep a shortlist of fields and towns, pick up where
+          you left off, and get frost, spray, and irrigation guidance
+          tuned to your crop.
+        </p>
+      </div>
+    </section>
+
+    <section class="auth-form-panel">
+      <div class="auth-form-card">
+        <h2>Welcome back</h2>
+        <p class="auth-sub">Sign in to your Skylight Farm account.</p>
+
+        <form id="loginForm" novalidate>
+          <label for="identifier">Username or email</label>
+          <input id="identifier" name="identifier" type="text" autocomplete="username" required />
+
+          <label for="password">Password</label>
+          <div class="password-row">
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+            <button type="button" class="toggle-visibility" id="togglePw">Show</button>
+          </div>
+          <a href="#" id="forgotLink" class="forgot-link">Forgot password?</a>
+
+          <div id="authMessage" class="auth-message" role="alert"></div>
+
+          <button type="submit" class="auth-submit">Sign in</button>
+        </form>
+
+        <p class="auth-switch">
+          New to Skylight Farm? <a href="register.html">Create an account</a>
+        </p>
+        <p class="auth-switch subtle">
+          Just browsing? <a href="index.html">Continue as guest</a>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    const pwInput = document.getElementById("password");
+    const toggleBtn = document.getElementById("togglePw");
+    toggleBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      const isHidden = pwInput.type === "password";
+      pwInput.type = isHidden ? "text" : "password";
+      toggleBtn.textContent = isHidden ? "Hide" : "Show";
+    });
+
+    document.getElementById("forgotLink").addEventListener("click", (event) => {
+      event.preventDefault();
+      alert("Password reset will be available soon.");
+    });
+
+    initAuthForm({
+      formId: "loginForm",
+      endpoint: "backend/login.php",
+      buildPayload: (data) => ({
+        identifier: data.identifier,
+        password: data.password,
+      }),
+      onSuccess: () => (window.location.href = "index.html"),
+    });
+  </script>
+</body>
+
+</html>
