@@ -267,9 +267,45 @@ function pushRecent(cityLabel) {
 }
 
 /* ---------------- Map (Google Maps) ---------------- */
+function showMapError(message) {
+  const mapEl = document.getElementById("weatherMap");
+  if (mapEl) {
+    mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:16px;text-align:center;color:var(--muted);font-size:0.85rem;">${message}</div>`;
+  }
+}
+
+// Fires if the Google Maps <script> tag itself fails to load (network
+// blocked, ad blocker, offline, wrong URL, etc.) — separate from an
+// invalid/missing API key, which triggers gm_authFailure below instead.
+window.handleMapsScriptError = function () {
+  showMapError(
+    "Couldn't load Google Maps. Check your internet connection or ad blocker.",
+  );
+};
+
+// Google calls this automatically when the API key is missing, invalid,
+// unauthorized for this domain, or billing isn't enabled on the project.
+// This is almost certainly what's firing if you still see the placeholder
+// key in index.html.
+window.gm_authFailure = function () {
+  showMapError(
+    "Google Maps couldn't authenticate. Replace YOUR_GOOGLE_MAPS_API_KEY in index.html with a valid key (Maps JavaScript API enabled, billing set up).",
+  );
+  updateStatus(
+    "Live map disabled: invalid Google Maps API key.",
+    true,
+  );
+};
+
 // Called automatically by the Google Maps script tag in index.html
 // once the Maps JavaScript API has finished loading (callback=initMap).
 function initMap() {
+  if (typeof google === "undefined" || !google.maps) {
+    // Defensive guard: initMap should only ever be invoked by Google's own
+    // callback once google.maps is ready, but bail out cleanly just in case.
+    showMapError("Google Maps failed to initialize.");
+    return;
+  }
   const defaultCenter = { lat: 51.5072, lng: -0.1276 };
 
   map = new google.maps.Map(document.getElementById("weatherMap"), {
