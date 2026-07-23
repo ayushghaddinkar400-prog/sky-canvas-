@@ -266,61 +266,21 @@ function pushRecent(cityLabel) {
   localStorage.setItem("skylight-recent", JSON.stringify(recent));
 }
 
-/* ---------------- Map (Google Maps) ---------------- */
-function showMapError(message) {
-  const mapEl = document.getElementById("weatherMap");
-  if (mapEl) {
-    mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:16px;text-align:center;color:var(--muted);font-size:0.85rem;">${message}</div>`;
-  }
-}
-
-// Fires if the Google Maps <script> tag itself fails to load (network
-// blocked, ad blocker, offline, wrong URL, etc.) — separate from an
-// invalid/missing API key, which triggers gm_authFailure below instead.
-window.handleMapsScriptError = function () {
-  showMapError(
-    "Couldn't load Google Maps. Check your internet connection or ad blocker.",
-  );
-};
-
-// Google calls this automatically when the API key is missing, invalid,
-// unauthorized for this domain, or billing isn't enabled on the project.
-// This is almost certainly what's firing if you still see the placeholder
-// key in index.html.
-window.gm_authFailure = function () {
-  showMapError(
-    "Google Maps couldn't authenticate. Replace YOUR_GOOGLE_MAPS_API_KEY in index.html with a valid key (Maps JavaScript API enabled, billing set up).",
-  );
-  updateStatus(
-    "Live map disabled: invalid Google Maps API key.",
-    true,
-  );
-};
-
-// Called automatically by the Google Maps script tag in index.html
-// once the Maps JavaScript API has finished loading (callback=initMap).
-function initMap() {
-  if (typeof google === "undefined" || !google.maps) {
-    // Defensive guard: initMap should only ever be invoked by Google's own
-    // callback once google.maps is ready, but bail out cleanly just in case.
-    showMapError("Google Maps failed to initialize.");
+/* ---------------- Map (Leaflet + OpenStreetMap, no API key needed) ---------------- */
+function initializeMap() {
+  if (typeof L === "undefined") {
     return;
   }
-  const defaultCenter = { lat: 51.5072, lng: -0.1276 };
 
-  map = new google.maps.Map(document.getElementById("weatherMap"), {
-    center: defaultCenter,
-    zoom: 4,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
-    clickableIcons: false,
-  });
+  map = L.map("weatherMap").setView([51.5072, -0.1276], 4);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors",
+  }).addTo(map);
 
-  map.addListener("click", async (event) => {
+  map.on("click", async (event) => {
     try {
-      const lat = event.latLng.lat();
-      const lon = event.latLng.lng();
+      const lat = event.latlng.lat;
+      const lon = event.latlng.lng;
       const reverseRes = await fetch(
         `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=en&format=json`,
       );
@@ -334,22 +294,7 @@ function initMap() {
       updateStatus(error.message, true);
     }
   });
-
-  // If weather data already finished loading before the Maps API callback
-  // fired, place the marker immediately instead of waiting for the next
-  // renderWeather() call.
-  if (currentPlace && currentPlace.latitude && currentPlace.longitude) {
-    const position = {
-      lat: currentPlace.latitude,
-      lng: currentPlace.longitude,
-    };
-    marker = new google.maps.Marker({ position, map });
-    map.setCenter(position);
-    map.setZoom(6);
-  }
 }
-// Expose globally so the Google Maps callback param can find it.
-window.initMap = initMap;
 
 /* ---------------- AI insight ---------------- */
 function renderAIInsight(current, daily) {
@@ -544,14 +489,13 @@ function renderWeather(place, data) {
   statusMessage.textContent = "Live weather data is ready.";
 
   if (map && place.latitude && place.longitude) {
-    const nextView = { lat: place.latitude, lng: place.longitude };
+    const nextView = [place.latitude, place.longitude];
     if (!marker) {
-      marker = new google.maps.Marker({ position: nextView, map });
+      marker = L.marker(nextView).addTo(map);
     } else {
-      marker.setPosition(nextView);
+      marker.setLatLng(nextView);
     }
-    map.setCenter(nextView);
-    map.setZoom(Math.max(map.getZoom(), 6));
+    map.setView(nextView, Math.max(map.getZoom(), 6));
   }
 
   forecastCards.innerHTML = "";
@@ -848,9 +792,7 @@ setInterval(
   10 * 60 * 1000,
 );
 
-// Note: the map is initialized by initMap(), called automatically by the
-// Google Maps script tag's callback param once the API script loads —
-// no manual call needed here.
+initializeMap();
 refreshAuthArea();
 initialize().catch((error) => {
   updateStatus(error.message, true);
