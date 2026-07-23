@@ -266,21 +266,25 @@ function pushRecent(cityLabel) {
   localStorage.setItem("skylight-recent", JSON.stringify(recent));
 }
 
-/* ---------------- Map ---------------- */
-function initializeMap() {
-  if (typeof L === "undefined") {
-    return;
-  }
+/* ---------------- Map (Google Maps) ---------------- */
+// Called automatically by the Google Maps script tag in index.html
+// once the Maps JavaScript API has finished loading (callback=initMap).
+function initMap() {
+  const defaultCenter = { lat: 51.5072, lng: -0.1276 };
 
-  map = L.map("weatherMap").setView([51.5072, -0.1276], 4);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(map);
+  map = new google.maps.Map(document.getElementById("weatherMap"), {
+    center: defaultCenter,
+    zoom: 4,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    clickableIcons: false,
+  });
 
-  map.on("click", async (event) => {
+  map.addListener("click", async (event) => {
     try {
-      const lat = event.latlng.lat;
-      const lon = event.latlng.lng;
+      const lat = event.latLng.lat();
+      const lon = event.latLng.lng();
       const reverseRes = await fetch(
         `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=en&format=json`,
       );
@@ -294,7 +298,22 @@ function initializeMap() {
       updateStatus(error.message, true);
     }
   });
+
+  // If weather data already finished loading before the Maps API callback
+  // fired, place the marker immediately instead of waiting for the next
+  // renderWeather() call.
+  if (currentPlace && currentPlace.latitude && currentPlace.longitude) {
+    const position = {
+      lat: currentPlace.latitude,
+      lng: currentPlace.longitude,
+    };
+    marker = new google.maps.Marker({ position, map });
+    map.setCenter(position);
+    map.setZoom(6);
+  }
 }
+// Expose globally so the Google Maps callback param can find it.
+window.initMap = initMap;
 
 /* ---------------- AI insight ---------------- */
 function renderAIInsight(current, daily) {
@@ -489,13 +508,14 @@ function renderWeather(place, data) {
   statusMessage.textContent = "Live weather data is ready.";
 
   if (map && place.latitude && place.longitude) {
-    const nextView = [place.latitude, place.longitude];
+    const nextView = { lat: place.latitude, lng: place.longitude };
     if (!marker) {
-      marker = L.marker(nextView).addTo(map);
+      marker = new google.maps.Marker({ position: nextView, map });
     } else {
-      marker.setLatLng(nextView);
+      marker.setPosition(nextView);
     }
-    map.setView(nextView, Math.max(map.getZoom(), 6));
+    map.setCenter(nextView);
+    map.setZoom(Math.max(map.getZoom(), 6));
   }
 
   forecastCards.innerHTML = "";
@@ -792,7 +812,9 @@ setInterval(
   10 * 60 * 1000,
 );
 
-initializeMap();
+// Note: the map is initialized by initMap(), called automatically by the
+// Google Maps script tag's callback param once the API script loads —
+// no manual call needed here.
 refreshAuthArea();
 initialize().catch((error) => {
   updateStatus(error.message, true);
