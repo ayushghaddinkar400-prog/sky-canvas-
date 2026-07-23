@@ -267,8 +267,21 @@ function pushRecent(cityLabel) {
 }
 
 /* ---------------- Map (Leaflet + OpenStreetMap, no API key needed) ---------------- */
+function showMapUnavailable(message) {
+  const mapEl = document.getElementById("weatherMap");
+  if (mapEl) {
+    mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:16px;text-align:center;color:var(--muted);font-size:0.85rem;">${message}</div>`;
+  }
+}
+
 function initializeMap() {
   if (typeof L === "undefined") {
+    // Leaflet's own script never loaded — usually a blocked/failed request
+    // to unpkg.com (ad blocker, offline, firewall). Check the Network tab
+    // for a red/failed request to leaflet.js if you see this.
+    showMapUnavailable(
+      "Map library failed to load. Check your internet connection or ad blocker.",
+    );
     return;
   }
 
@@ -294,6 +307,14 @@ function initializeMap() {
       updateStatus(error.message, true);
     }
   });
+
+  // Leaflet measures its container's size the instant L.map() runs. If the
+  // surrounding CSS grid hasn't finished its first layout pass yet (e.g.
+  // while web fonts are still loading), it can grab a 0-size container and
+  // render nothing until the window is resized. Force a re-measure shortly
+  // after init, and again on window resize, as a safety net.
+  setTimeout(() => map.invalidateSize(), 200);
+  window.addEventListener("resize", () => map.invalidateSize());
 }
 
 /* ---------------- AI insight ---------------- */
