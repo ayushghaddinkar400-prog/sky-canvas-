@@ -10,6 +10,12 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha512-sA+2siC5JXI4M7a7ueaN7KUFl4o3GqlLKQ6Clc7wVs5a1+6jV2oS5RhYjUubaGJ1lxT3GbfG4T8mXlrErFf+MQ=="
+      crossorigin="anonymous"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -199,21 +205,15 @@
       </section>
     </main>
 
-    <script src="app.js"></script>
     <!--
-      Google Maps JavaScript API.
-      Replace YOUR_GOOGLE_MAPS_API_KEY below with a real key from the
-      Google Cloud Console (enable "Maps JavaScript API" and set up billing).
-      The `callback=initMap` param tells Google Maps to call window.initMap
-      (defined in app.js) as soon as the API has finished loading.
-      IMPORTANT: this tag must come AFTER app.js so initMap already exists
-      by the time Google's script calls it back.
+      Leaflet + OpenStreetMap — no API key, no billing account, no signup.
+      Free for reasonable usage under OSM's tile usage policy.
     -->
     <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap"
-      async
-      defer
-      onerror="window.handleMapsScriptError && window.handleMapsScriptError()"
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha512-o9N1j7f1yfTiq7+SPKLB3qDg9NqPjK08o20dA1TfRwV+r9oc2x6FQJLA0wO7V5CjZc2QxkF7+G5H4T/jpI0Ppg=="
+      crossorigin="anonymous"
     ></script>
+    <script src="app.js"></script>
   </body>
 </html>
