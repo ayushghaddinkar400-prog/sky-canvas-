@@ -199,15 +199,21 @@
       </section>
     </main>
 
+    <script src="app.js"></script>
     <!--
       Google Maps JavaScript API.
       Replace YOUR_GOOGLE_MAPS_API_KEY below with a real key from the
       Google Cloud Console (enable "Maps JavaScript API" and set up billing).
       The `callback=initMap` param tells Google Maps to call window.initMap
       (defined in app.js) as soon as the API has finished loading.
+      IMPORTANT: this tag must come AFTER app.js so initMap already exists
+      by the time Google's script calls it back.
     -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&loading=async&callback=initMap">
-    </script>
-    <script src="app.js"></script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&loading=async&callback=initMap"
+      async
+      defer
+      onerror="window.handleMapsScriptError && window.handleMapsScriptError()"
+    ></script>
   </body>
 </html>
